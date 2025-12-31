@@ -538,14 +538,14 @@ async def get_session_stats():
     }
 
 
-if __name__ == "__main__":
-    import uvicorn
+# if __name__ == "__main__":
+#     import uvicorn
 
-    config = get_config()
-    uvicorn.run(
-        "app:app",
-        host=config.host,
-        port=config.port,
-        reload=config.debug,
-        log_level=config.log_level.lower()
-    )
+#     config = get_config()
+#     uvicorn.run(
+#         "app:app",
+#         host=config.host,
+#         port=config.port,
+#         reload=config.debug,
+#         log_level=config.log_level.lower()
+#     )
