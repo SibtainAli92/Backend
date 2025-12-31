@@ -1,0 +1,122 @@
+[2025-12-20 03:55:16] [INFO] ================================================================================
+[2025-12-20 03:55:16] [INFO] BACKEND TEST REPORT - COMPREHENSIVE FUNCTION VERIFICATION
+[2025-12-20 03:55:16] [INFO] ================================================================================
+[2025-12-20 03:55:16] [INFO] Test Session Started: 2025-12-20 03:55:16
+[2025-12-20 03:55:16] [INFO] Log File: E:\sibtain\hacathon-03\Humanoid-robotics\humanoid-robotics\backend\backend_test_report.log
+[2025-12-20 03:55:16] [INFO] ================================================================================
+[2025-12-20 03:55:16] [INFO] 
+[2025-12-20 03:55:16] [INFO] Starting comprehensive backend testing...
+[2025-12-20 03:55:16] [INFO] 
+[2025-12-20 03:55:16] [INFO] Executing pytest with all test files...
+============================= test session starts =============================
+platform win32 -- Python 3.13.2, pytest-9.0.2, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: E:\sibtain\hacathon-03\Humanoid-robotics\humanoid-robotics\backend
+plugins: anyio-4.12.0
+collecting ... collected 67 items
+
+tests/test_connection.py::TestConnections::test_connections_init PASSED  [  1%]
+tests/test_connection.py::TestConnections::test_get_qdrant_client_with_api_key PASSED [  2%]
+tests/test_connection.py::TestConnections::test_get_qdrant_client_without_api_key PASSED [  4%]
+tests/test_connection.py::TestConnections::test_get_qdrant_client_singleton PASSED [  5%]
+tests/test_connection.py::TestConnections::test_get_openai_client PASSED [  7%]
+tests/test_connection.py::TestConnections::test_get_openai_client_missing_key PASSED [  8%]
+tests/test_connection.py::TestConnections::test_configure_gemini PASSED  [ 10%]
+tests/test_connection.py::TestConnections::test_configure_gemini_missing_key PASSED [ 11%]
+tests/test_connection.py::TestConnections::test_ensure_qdrant_collection_creates_new PASSED [ 13%]
+tests/test_connection.py::TestConnections::test_ensure_qdrant_collection_exists PASSED [ 14%]
+tests/test_connection.py::TestConnections::test_global_get_qdrant_client PASSED [ 16%]
+tests/test_connection.py::TestConnections::test_global_get_openai_client PASSED [ 17%]
+tests/test_connection.py::TestConnections::test_global_configure_gemini PASSED [ 19%]
+tests/test_models.py::TestBookModels::test_chapter_creation PASSED       [ 20%]
+tests/test_models.py::TestBookModels::test_chapter_missing_required_fields PASSED [ 22%]
+tests/test_models.py::TestBookModels::test_section_creation PASSED       [ 23%]
+tests/test_models.py::TestBookModels::test_book_content_with_defaults PASSED [ 25%]
+tests/test_models.py::TestBookModels::test_chunk_creation PASSED         [ 26%]
+tests/test_models.py::TestChatModels::test_query_valid_mode_rag PASSED   [ 28%]
+tests/test_models.py::TestChatModels::test_query_valid_mode_selected PASSED [ 29%]
+tests/test_models.py::TestChatModels::test_query_invalid_mode PASSED     [ 31%]
+tests/test_models.py::TestChatModels::test_query_top_k_bounds PASSED     [ 32%]
+tests/test_models.py::TestChatModels::test_source_creation PASSED        [ 34%]
+tests/test_models.py::TestChatModels::test_chat_request_validation PASSED [ 35%]
+tests/test_models.py::TestChatModels::test_chat_request_selected_text_limit PASSED [ 37%]
+tests/test_models.py::TestChatModels::test_chat_response_creation PASSED [ 38%]
+tests/test_models.py::TestChatModels::test_rag_tool_request_mode_validation PASSED [ 40%]
+tests/test_models.py::TestChatModels::test_rag_tool_response_creation PASSED [ 41%]
+tests/test_models.py::TestSessionModel::test_session_creation PASSED     [ 43%]
+tests/test_models.py::TestSessionModel::test_session_add_turn PASSED     [ 44%]
+tests/test_models.py::TestSessionModel::test_session_history_limit PASSED [ 46%]
+tests/test_models.py::TestSessionModel::test_session_is_expired PASSED   [ 47%]
+tests/test_models.py::TestSessionModel::test_conversation_turn_creation PASSED [ 49%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_tool_initialization PASSED [ 50%]
+tests/test_rag_tool.py::TestRAGTool::test_generate_embedding PASSED      [ 52%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_query_rag_mode_success PASSED [ 53%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_query_rag_mode_empty_results PASSED [ 55%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_query_selected_mode PASSED [ 56%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_query_invalid_mode PASSED  [ 58%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_query_selected_without_text PASSED [ 59%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_query_exception_handling PASSED [ 61%]
+tests/test_rag_tool.py::TestRAGTool::test_rag_query_score_threshold PASSED [ 62%]
+tests/test_rag_tool.py::TestRAGToolSchema::test_tool_schema_structure PASSED [ 64%]
+tests/test_rag_tool.py::TestRAGToolSchema::test_tool_schema_parameters PASSED [ 65%]
+tests/test_agent.py::TestBookRAGAgent::test_agent_initialization PASSED  [ 67%]
+tests/test_agent.py::TestBookRAGAgent::test_agent_system_prompt_no_hallucination PASSED [ 68%]
+tests/test_agent.py::TestBookRAGAgent::test_agent_run_rag_mode PASSED    [ 70%]
+tests/test_agent.py::TestBookRAGAgent::test_agent_run_selected_mode PASSED [ 71%]
+tests/test_agent.py::TestBookRAGAgent::test_agent_run_with_session_context PASSED [ 73%]
+tests/test_agent.py::TestBookRAGAgent::test_agent_run_exception_handling PASSED [ 74%]
+tests/test_agent.py::TestBookRAGAgent::test_agent_run_tool_parameters PASSED [ 76%]
+tests/test_agent.py::TestGetAgent::test_get_agent_singleton PASSED       [ 77%]
+tests/test_api.py::TestRootEndpoint::test_root_endpoint PASSED           [ 79%]
+tests/test_api.py::TestHealthEndpoint::test_health_check PASSED          [ 80%]
+tests/test_api.py::TestChatEndpoint::test_chat_valid_request PASSED      [ 82%]
+tests/test_api.py::TestChatEndpoint::test_chat_creates_session PASSED    [ 83%]
+tests/test_api.py::TestChatEndpoint::test_chat_rag_mode PASSED           [ 85%]
+tests/test_api.py::TestChatEndpoint::test_chat_selected_mode PASSED      [ 86%]
+tests/test_api.py::TestChatEndpoint::test_chat_invalid_request_empty_message PASSED [ 88%]
+tests/test_api.py::TestChatEndpoint::test_chat_invalid_request_missing_message PASSED [ 89%]
+tests/test_api.py::TestChatEndpoint::test_chat_agent_failure PASSED      [ 91%]
+tests/test_api.py::TestChatEndpoint::test_chat_session_history PASSED    [ 92%]
+tests/test_api.py::TestSessionEndpoints::test_get_session PASSED         [ 94%]
+tests/test_api.py::TestSessionEndpoints::test_get_session_not_found PASSED [ 95%]
+tests/test_api.py::TestSessionEndpoints::test_delete_session PASSED      [ 97%]
+tests/test_api.py::TestSessionEndpoints::test_delete_session_not_found PASSED [ 98%]
+tests/test_api.py::TestSessionEndpoints::test_cleanup_expired_sessions PASSED [100%]
+
+====================== 67 passed, 197 warnings in 38.26s ======================
+[2025-12-20 03:55:58] [INFO] 
+[2025-12-20 03:55:58] [INFO] ================================================================================
+[2025-12-20 03:55:58] [INFO] TEST EXECUTION COMPLETE
+[2025-12-20 03:55:58] [INFO] ================================================================================
+[2025-12-20 03:55:58] [INFO] 
+[2025-12-20 03:55:58] [INFO] ================================================================================
+[2025-12-20 03:55:58] [INFO] TEST SUMMARY
+[2025-12-20 03:55:58] [INFO] ================================================================================
+[2025-12-20 03:55:58] [INFO] Total Tests:     67
+[2025-12-20 03:55:58] [INFO] Passed:          67 (100.0%)
+[2025-12-20 03:55:58] [INFO] Failed:          0
+[2025-12-20 03:55:58] [INFO] Skipped:         0
+[2025-12-20 03:55:58] [INFO] Duration:        41.87 seconds
+[2025-12-20 03:55:58] [INFO] End Time:        2025-12-20 03:55:58
+[2025-12-20 03:55:58] [INFO] ================================================================================
+[2025-12-20 03:55:58] [INFO] 
+[2025-12-20 03:55:58] [INFO] Full report saved to: E:\sibtain\hacathon-03\Humanoid-robotics\humanoid-robotics\backend\backend_test_report.log
+[2025-12-20 03:55:58] [INFO] 
+[2025-12-20 03:55:58] [INFO] 
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Program Files\Python313\Lib\logging\__init__.py", line 1153, in emit
+    stream.write(msg + self.terminator)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "E:\sibtain\hacathon-03\Humanoid-robotics\humanoid-robotics\backend\tests\run_all_tests.py", line 66, in <module>
+    sys.exit(run_all_tests())
+  File "E:\sibtain\hacathon-03\Humanoid-robotics\humanoid-robotics\backend\tests\run_all_tests.py", line 55, in run_all_tests
+    test_logger.logger.info("\u2713 ALL TESTS PASSED!")
+Message: '\u2713 ALL TESTS PASSED!'
+Arguments: ()
+[2025-12-20 03:55:59] [INFO] 
