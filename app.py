@@ -1,7 +1,7 @@
 """
 FastAPI application for Book RAG Agent.
 
-SIMPLIFIED - Raw exceptions, no custom error masking.
+Serverless-compatible version - handles startup gracefully without crashes.
 """
 
 import os
@@ -16,10 +16,6 @@ from dotenv import load_dotenv
 # Load environment variables FIRST - before any other imports
 load_dotenv(override=True)
 
-# Log env vars immediately after loading
-print(f"[APP STARTUP] QDRANT_URL = {os.getenv('QDRANT_URL', 'NOT SET')}")
-print(f"[APP STARTUP] QDRANT_API_KEY = {os.getenv('QDRANT_API_KEY', '')[:4]}...{os.getenv('QDRANT_API_KEY', '')[-4:] if os.getenv('QDRANT_API_KEY') else 'NOT SET'}")
-
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -33,6 +29,9 @@ from logger import get_logger
 
 logger = get_logger(__name__)
 
+# Check if running in serverless environment
+IS_SERVERLESS = os.getenv("VERCEL") == "1" or os.getenv("AWS_LAMBDA_FUNCTION_NAME") is not None
+
 # In-memory session storage (use Redis/database for production)
 sessions: Dict[str, Session] = {}
 
@@ -40,13 +39,14 @@ sessions: Dict[str, Session] = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Application lifespan with STRICT knowledge base validation.
+    Application lifespan with graceful error handling for serverless.
 
-    FAIL FAST principle: If knowledge base is not accessible, startup fails.
+    In serverless mode, we try to initialize but don't fail hard.
+    This allows the function to start and return errors gracefully.
     """
     # Startup
     logger.info("=" * 60)
-    logger.info("Starting Book RAG Agent API")
+    logger.info(f"Starting Book RAG Agent API (Serverless: {IS_SERVERLESS})")
     logger.info("=" * 60)
 
     # Print env vars to prove they're loaded
@@ -62,74 +62,92 @@ async def lifespan(app: FastAPI):
     app.state.qdrant_status = {"healthy": False, "error": None, "vector_count": 0}
 
     try:
-        config = validate_config_on_startup()
-        logger.info("Configuration validated")
-
-        # STEP 1: Test raw Qdrant connection
-        logger.info("[STARTUP] Step 1: Testing Qdrant connection...")
-        qdrant_result = validate_qdrant_connection()
-
-        if not qdrant_result.get("success"):
-            error_msg = qdrant_result.get('exception_message', 'Unknown error')
-            logger.error(f"[STARTUP] CRITICAL: Qdrant connection FAILED!")
-            logger.error(f"[STARTUP] Error: {error_msg}")
-            logger.error(f"[STARTUP] Full result: {qdrant_result}")
-
-            # Store error for health endpoint
+        # Try to validate config, but don't fail in serverless
+        try:
+            config = validate_config_on_startup()
+            logger.info("Configuration validated")
+        except ValueError as e:
+            logger.error(f"Configuration validation failed: {e}")
             app.state.qdrant_status = {
                 "healthy": False,
-                "error": error_msg,
-                "vector_count": 0,
-                "details": qdrant_result
+                "error": f"Configuration error: {str(e)}",
+                "vector_count": 0
             }
+            yield
+            return
 
-            # Log but don't crash - allow degraded mode for debugging
-            logger.warning("[STARTUP] Starting in DEGRADED MODE - RAG queries will fail!")
-        else:
-            logger.info(f"[STARTUP] Qdrant connected! Collections: {qdrant_result.get('collections')}")
+        # STEP 1: Test raw Qdrant connection (with timeout for serverless)
+        logger.info("[STARTUP] Step 1: Testing Qdrant connection...")
+        try:
+            qdrant_result = validate_qdrant_connection()
 
-            # STEP 2: Validate collection exists and has data
-            logger.info(f"[STARTUP] Step 2: Validating collection '{collection_name}'...")
-            try:
-                collection_info = ensure_qdrant_collection(
-                    collection_name=collection_name,
-                    vector_size=768
-                )
-                vector_count = collection_info.get('points_count', 0)
-                logger.info(f"[STARTUP] SUCCESS! Collection '{collection_name}' ready")
-                logger.info(f"[STARTUP] Vector count: {vector_count}")
+            if not qdrant_result.get("success"):
+                error_msg = qdrant_result.get('exception_message', 'Unknown error')
+                logger.error(f"[STARTUP] CRITICAL: Qdrant connection FAILED!")
+                logger.error(f"[STARTUP] Error: {error_msg}")
+                logger.error(f"[STARTUP] Full result: {qdrant_result}")
 
-                app.state.qdrant_status = {
-                    "healthy": True,
-                    "error": None,
-                    "vector_count": vector_count,
-                    "collection": collection_name
-                }
-
-            except QdrantConnectionError as e:
-                logger.error(f"[STARTUP] Collection validation FAILED: {e}")
+                # Store error for health endpoint
                 app.state.qdrant_status = {
                     "healthy": False,
-                    "error": str(e),
-                    "vector_count": 0
+                    "error": error_msg,
+                    "vector_count": 0,
+                    "details": qdrant_result
                 }
-                logger.warning("[STARTUP] Starting in DEGRADED MODE - RAG queries will fail!")
 
-            except Exception as e:
-                logger.error(f"[STARTUP] Unexpected collection error: {type(e).__name__}: {e}")
-                app.state.qdrant_status = {
-                    "healthy": False,
-                    "error": f"{type(e).__name__}: {e}",
-                    "vector_count": 0
-                }
+                # In serverless, we allow degraded mode but log it
                 logger.warning("[STARTUP] Starting in DEGRADED MODE - RAG queries will fail!")
+            else:
+                logger.info(f"[STARTUP] Qdrant connected! Collections: {qdrant_result.get('collections')}")
+
+                # STEP 2: Validate collection exists and has data
+                logger.info(f"[STARTUP] Step 2: Validating collection '{collection_name}'...")
+                try:
+                    collection_info = ensure_qdrant_collection(
+                        collection_name=collection_name,
+                        vector_size=768
+                    )
+                    vector_count = collection_info.get('points_count', 0)
+                    logger.info(f"[STARTUP] SUCCESS! Collection '{collection_name}' ready")
+                    logger.info(f"[STARTUP] Vector count: {vector_count}")
+
+                    app.state.qdrant_status = {
+                        "healthy": True,
+                        "error": None,
+                        "vector_count": vector_count,
+                        "collection": collection_name
+                    }
+
+                except QdrantConnectionError as e:
+                    logger.error(f"[STARTUP] Collection validation FAILED: {e}")
+                    app.state.qdrant_status = {
+                        "healthy": False,
+                        "error": str(e),
+                        "vector_count": 0
+                    }
+                    logger.warning("[STARTUP] Starting in DEGRADED MODE - RAG queries will fail!")
+
+                except Exception as e:
+                    logger.error(f"[STARTUP] Unexpected collection error: {type(e).__name__}: {e}")
+                    app.state.qdrant_status = {
+                        "healthy": False,
+                        "error": f"{type(e).__name__}: {e}",
+                        "vector_count": 0
+                    }
+                    logger.warning("[STARTUP] Starting in DEGRADED MODE - RAG queries will fail!")
+
+        except Exception as e:
+            logger.error(f"[STARTUP] Qdrant connection attempt failed: {type(e).__name__}: {e}")
+            app.state.qdrant_status = {
+                "healthy": False,
+                "error": f"Connection failed: {type(e).__name__}: {e}",
+                "vector_count": 0
+            }
 
         logger.info("=" * 60)
         logger.info(f"[STARTUP] Final status: Qdrant healthy={app.state.qdrant_status['healthy']}")
         logger.info("=" * 60)
 
-    except SystemExit:
-        raise
     except Exception as e:
         logger.error(f"[STARTUP] Fatal error: {type(e).__name__}: {e}", exc_info=True)
         app.state.qdrant_status = {
@@ -137,12 +155,18 @@ async def lifespan(app: FastAPI):
             "error": f"Startup failed: {type(e).__name__}: {e}",
             "vector_count": 0
         }
+        # In serverless, we don't crash - we just note the error
+        if not IS_SERVERLESS:
+            raise
 
     yield
 
     # Shutdown
     logger.info("Shutting down")
-    reset_agent()
+    try:
+        reset_agent()
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
     sessions.clear()
 
 
@@ -250,6 +274,7 @@ async def root():
         "message": "Book RAG Agent API",
         "version": "1.0.0",
         "status": "running",
+        "serverless": IS_SERVERLESS,
         "docs": "/docs"
     }
 
@@ -280,12 +305,14 @@ async def health_check(request: Request):
         return {
             "status": "healthy" if all_healthy else "degraded",
             "timestamp": datetime.utcnow().isoformat() + "Z",
+            "serverless": IS_SERVERLESS,
             "startup_validation": startup_status,
             "live_check": services,
             "env": {
                 "QDRANT_URL": os.getenv("QDRANT_URL", "NOT SET"),
                 "QDRANT_API_KEY_LENGTH": len(os.getenv("QDRANT_API_KEY", "")),
-                "QDRANT_COLLECTION_NAME": os.getenv("QDRANT_COLLECTION_NAME", "book_chunks")
+                "QDRANT_COLLECTION_NAME": os.getenv("QDRANT_COLLECTION_NAME", "book_chunks"),
+                "GEMINI_API_KEY_LENGTH": len(os.getenv("GEMINI_API_KEY", "")),
             },
             "rag_ready": startup_status.get("healthy", False) and startup_status.get("vector_count", 0) > 0
         }
@@ -293,6 +320,7 @@ async def health_check(request: Request):
         return {
             "status": "error",
             "timestamp": datetime.utcnow().isoformat() + "Z",
+            "serverless": IS_SERVERLESS,
             "exception_type": type(e).__name__,
             "exception_message": str(e),
             "rag_ready": False
@@ -538,14 +566,14 @@ async def get_session_stats():
     }
 
 
-# if __name__ == "__main__":
-#     import uvicorn
+if __name__ == "__main__":
+    import uvicorn
 
-#     config = get_config()
-#     uvicorn.run(
-#         "app:app",
-#         host=config.host,
-#         port=config.port,
-#         reload=config.debug,
-#         log_level=config.log_level.lower()
-#     )
+    config = get_config()
+    uvicorn.run(
+        "app:app",
+        host=config.host,
+        port=config.port,
+        reload=config.debug,
+        log_level=config.log_level.lower()
+    )

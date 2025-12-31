@@ -240,7 +240,7 @@ def validate_config_on_startup() -> AppConfig:
     Validate configuration on application startup.
 
     Raises:
-        SystemExit: If critical configuration is missing
+        ValueError: If critical configuration is missing (instead of SystemExit for serverless compatibility)
 
     Returns:
         AppConfig: Validated configuration
@@ -252,9 +252,11 @@ def validate_config_on_startup() -> AppConfig:
     validator.print_status()
 
     if not is_valid:
-        print("[FATAL] Cannot start application due to configuration errors.")
-        print("        Please check your .env file and ensure all required variables are set.")
-        sys.exit(1)
+        error_msgs = [f"{error.key}: {error.message}" for error in validator.errors if error.is_critical]
+        raise ValueError(
+            f"Cannot start application due to configuration errors. "
+            f"Missing or invalid: {', '.join(error_msgs)}"
+        )
 
     return config
 

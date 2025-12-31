@@ -42,13 +42,6 @@ class GeminiConnectionError(Exception):
     pass
 
 
-# Log environment variables at module load time
-_qdrant_url = os.getenv("QDRANT_URL", "")
-_qdrant_api_key = os.getenv("QDRANT_API_KEY", "")
-logger.info(f"[STARTUP] QDRANT_URL = {_qdrant_url}")
-logger.info(f"[STARTUP] QDRANT_API_KEY = {_qdrant_api_key[:4]}...{_qdrant_api_key[-4:] if _qdrant_api_key else 'EMPTY'} (len={len(_qdrant_api_key)})")
-
-
 class Connections:
     """Manages connections to external services."""
 
