@@ -9,10 +9,11 @@ import os
 import sys
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Only load .env file in development (not on Vercel)
+if os.getenv("VERCEL") != "1":
+    from dotenv import load_dotenv
+    load_dotenv()
 
 
 @dataclass

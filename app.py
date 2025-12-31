@@ -11,10 +11,11 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Dict, Optional
 
-from dotenv import load_dotenv
-
-# Load environment variables FIRST - before any other imports
-load_dotenv(override=True)
+# Only load .env file in development (not on Vercel)
+# Vercel sets environment variables directly
+if os.getenv("VERCEL") != "1":
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware

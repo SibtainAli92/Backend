@@ -7,10 +7,11 @@ SIMPLIFIED VERSION - Returns raw SDK exceptions only.
 import os
 import time
 from typing import Optional, Tuple
-from dotenv import load_dotenv
 
-# Load dotenv at module level FIRST
-load_dotenv(override=True)
+# Only load .env file in development (not on Vercel)
+if os.getenv("VERCEL") != "1":
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
